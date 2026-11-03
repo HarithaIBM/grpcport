@@ -862,3 +862,49 @@ diff --git a/src/core/tsi/ssl_transport_security_utils.cc b/src/core/tsi/ssl_tra
    int j = X509_CRL_get_ext_by_NID(crl, NID_authority_key_identifier, -1);
    // Can't have multiple occurrences
    if (j >= 0) {
+diff --git a/src/core/lib/event_engine/posix_engine/ev_poll_posix.cc b/src/core/lib/event_engine/posix_engine/ev_poll_posix.cc
+--- a/src/core/lib/event_engine/posix_engine/ev_poll_posix.cc
++++ b/src/core/lib/event_engine/posix_engine/ev_poll_posix.cc
+@@ -44,6 +44,13 @@
+ #include <poll.h>
++// z/OS: <poll.h> uses __poll as its include guard (#define __poll 1), which
++// leaks and collides with the __poll parameter name in libc++'s
++// __thread/poll_with_backoff.h. Redefine the macro to a unique token: the
++// include guard still works, and the libc++ parameter gets renamed
++// consistently by macro expansion in both declaration and uses.
++#define __poll grpc_zos_poll_guard
+ 
+ #include "src/core/lib/event_engine/common/handle_containers.h"
+diff --git a/src/core/lib/iomgr/ev_epoll1_linux.cc b/src/core/lib/iomgr/ev_epoll1_linux.cc
+--- a/src/core/lib/iomgr/ev_epoll1_linux.cc
++++ b/src/core/lib/iomgr/ev_epoll1_linux.cc
+@@ -31,6 +31,13 @@
+ #include <poll.h>
++// z/OS: <poll.h> __poll include-guard vs libc++ __poll parameter clash.
++// See src/core/lib/iomgr/ev_poll_posix.cc for details.
++#define __poll grpc_zos_poll_guard
+ 
+ #include <sys/epoll.h>
+diff --git a/src/core/lib/iomgr/ev_poll_posix.cc b/src/core/lib/iomgr/ev_poll_posix.cc
+--- a/src/core/lib/iomgr/ev_poll_posix.cc
++++ b/src/core/lib/iomgr/ev_poll_posix.cc
+@@ -28,6 +28,13 @@
+ #include <poll.h>
++// z/OS: <poll.h> uses __poll as its include guard (#define __poll 1), which
++// leaks and collides with the __poll parameter name in libc++'s
++// __thread/poll_with_backoff.h. Redefine the macro to a unique token: the
++// include guard still works, and the libc++ parameter gets renamed
++// consistently by macro expansion in both declaration and uses.
++#define __poll grpc_zos_poll_guard
+ 
+ #include <string.h>
+diff --git a/src/core/lib/iomgr/ev_posix.h b/src/core/lib/iomgr/ev_posix.h
+--- a/src/core/lib/iomgr/ev_posix.h
++++ b/src/core/lib/iomgr/ev_posix.h
+@@ -25,6 +25,13 @@
+ #include <poll.h>
++// z/OS: <poll.h> __poll include-guard vs libc++ __poll parameter clash.
++// See src/core/lib/iomgr/ev_poll_posix.cc for details.
++#define __poll grpc_zos_poll_guard
+ 
+ #include "src/core/lib/iomgr/exec_ctx.h"
